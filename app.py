@@ -26,9 +26,28 @@ Devuelve únicamente el prompt mejorado y listo para usar, sin explicaciones adi
 def index():
     return send_from_directory(".", "index.html")
 
+@app.route("/login", methods=["POST"])
+def login():
+    data = request.get_json()
+    password = data.get("password", "")
+    correct = os.environ.get("APP_PASSWORD", "")
+    if not correct:
+        return jsonify({"error": "APP_PASSWORD no configurada."}), 500
+    if password == correct:
+        return jsonify({"ok": True})
+    return jsonify({"error": "Contraseña incorrecta."}), 401
+
+
 @app.route("/improve", methods=["POST"])
 def improve_prompt():
     data = request.get_json()
+
+    # Verificar contraseña en cada petición
+    password = data.get("password", "")
+    correct = os.environ.get("APP_PASSWORD", "")
+    if not correct or password != correct:
+        return jsonify({"error": "No autorizado."}), 401
+
     user_prompt = data.get("prompt", "").strip()
 
     if not user_prompt:

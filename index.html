@@ -26,42 +26,26 @@
       max-width: 760px;
     }
 
-    h1 {
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: #1a1a1a;
-      margin-bottom: .35rem;
-    }
+    h1 { font-size: 1.6rem; font-weight: 700; color: #1a1a1a; margin-bottom: .35rem; }
+    .subtitle { font-size: .9rem; color: #666; margin-bottom: 2rem; }
 
-    .subtitle {
-      font-size: .9rem;
-      color: #666;
-      margin-bottom: 2rem;
-    }
+    label { display: block; font-size: .85rem; font-weight: 600; color: #444; margin-bottom: .5rem; }
 
-    label {
-      display: block;
-      font-size: .85rem;
-      font-weight: 600;
-      color: #444;
-      margin-bottom: .5rem;
-    }
-
-    textarea {
+    input[type="password"], textarea {
       width: 100%;
       border: 1.5px solid #ddd;
       border-radius: 8px;
       padding: .85rem 1rem;
       font-size: .95rem;
       font-family: inherit;
-      resize: vertical;
-      min-height: 140px;
       transition: border-color .2s;
       color: #222;
       background: #fafafa;
     }
 
-    textarea:focus {
+    textarea { resize: vertical; min-height: 140px; }
+
+    input[type="password"]:focus, textarea:focus {
       outline: none;
       border-color: #4f46e5;
       background: #fff;
@@ -84,11 +68,7 @@
     button:hover:not(:disabled) { background: #4338ca; }
     button:disabled { opacity: .6; cursor: not-allowed; }
 
-    .divider {
-      border: none;
-      border-top: 1.5px solid #eee;
-      margin: 2rem 0;
-    }
+    .divider { border: none; border-top: 1.5px solid #eee; margin: 2rem 0; }
 
     .result-label {
       display: flex;
@@ -98,16 +78,10 @@
     }
 
     #copy-btn {
-      width: auto;
-      margin-top: 0;
-      padding: .4rem .9rem;
-      font-size: .8rem;
-      background: #f0f0f0;
-      color: #333;
-      border-radius: 6px;
-      font-weight: 500;
+      width: auto; margin-top: 0; padding: .4rem .9rem;
+      font-size: .8rem; background: #f0f0f0; color: #333;
+      border-radius: 6px; font-weight: 500;
     }
-
     #copy-btn:hover:not(:disabled) { background: #e0e0e0; }
 
     #result {
@@ -123,55 +97,110 @@
     }
 
     .placeholder-text { color: #aaa; font-style: italic; }
-
     .error-text { color: #dc2626; }
 
     .spinner {
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      border: 2px solid rgba(255,255,255,.4);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin .7s linear infinite;
-      margin-right: 8px;
-      vertical-align: middle;
+      display: inline-block; width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,.4); border-top-color: #fff;
+      border-radius: 50%; animation: spin .7s linear infinite;
+      margin-right: 8px; vertical-align: middle;
     }
-
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Login screen */
+    #login-screen { display: flex; flex-direction: column; }
+    #login-screen .lock { font-size: 2.5rem; text-align: center; margin-bottom: 1rem; }
+    #login-screen h1 { text-align: center; }
+    #login-screen .subtitle { text-align: center; }
+    #login-error { color: #dc2626; font-size: .85rem; margin-top: .5rem; display: none; }
+
+    /* Main app */
+    #app-screen { display: none; }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>✨ Mejorador de Prompts</h1>
-    <p class="subtitle">Optimiza tus prompts usando el framework TCEPF (Tarea · Contexto · Ejemplos · Persona · Tono · Formato)</p>
 
-    <label for="input-prompt">Tu prompt original</label>
-    <textarea
-      id="input-prompt"
-      placeholder="Escribe aquí el prompt que quieres mejorar..."
-    ></textarea>
+    <!-- PANTALLA DE LOGIN -->
+    <div id="login-screen">
+      <div class="lock">🔒</div>
+      <h1>Mejorador de Prompts</h1>
+      <p class="subtitle">Ingresa la contraseña para continuar</p>
 
-    <button id="improve-btn" onclick="improvePrompt()">
-      Mejorar prompt
-    </button>
-
-    <hr class="divider" />
-
-    <div class="result-label">
-      <label style="margin-bottom:0">Prompt mejorado</label>
-      <button id="copy-btn" onclick="copyResult()" style="display:none">Copiar</button>
+      <div style="margin-top: 1.5rem">
+        <label for="password-input">Contraseña</label>
+        <input type="password" id="password-input" placeholder="••••••••" />
+        <div id="login-error">Contraseña incorrecta. Intenta de nuevo.</div>
+        <button onclick="doLogin()">Entrar</button>
+      </div>
     </div>
-    <div id="result"><span class="placeholder-text">El prompt mejorado aparecerá aquí…</span></div>
+
+    <!-- PANTALLA PRINCIPAL -->
+    <div id="app-screen">
+      <h1>✨ Mejorador de Prompts</h1>
+      <p class="subtitle">Optimiza tus prompts usando el framework TCEPF (Tarea · Contexto · Ejemplos · Persona · Tono · Formato)</p>
+
+      <label for="input-prompt">Tu prompt original</label>
+      <textarea id="input-prompt" placeholder="Escribe aquí el prompt que quieres mejorar..."></textarea>
+
+      <button id="improve-btn" onclick="improvePrompt()">Mejorar prompt</button>
+
+      <hr class="divider" />
+
+      <div class="result-label">
+        <label style="margin-bottom:0">Prompt mejorado</label>
+        <button id="copy-btn" onclick="copyResult()" style="display:none">Copiar</button>
+      </div>
+      <div id="result"><span class="placeholder-text">El prompt mejorado aparecerá aquí…</span></div>
+    </div>
+
   </div>
 
   <script>
+    let sessionPassword = "";
+
+    // Si ya hay contraseña guardada en sesión, saltar login
+    sessionPassword = sessionStorage.getItem("app_password") || "";
+    if (sessionPassword) showApp();
+
+    async function doLogin() {
+      const input = document.getElementById("password-input");
+      const errorEl = document.getElementById("login-error");
+      const pwd = input.value;
+
+      if (!pwd) return;
+
+      try {
+        const res = await fetch("/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: pwd }),
+        });
+
+        if (res.ok) {
+          sessionPassword = pwd;
+          sessionStorage.setItem("app_password", pwd);
+          errorEl.style.display = "none";
+          showApp();
+        } else {
+          errorEl.style.display = "block";
+          input.value = "";
+          input.focus();
+        }
+      } catch {
+        errorEl.textContent = "Error de conexión.";
+        errorEl.style.display = "block";
+      }
+    }
+
+    function showApp() {
+      document.getElementById("login-screen").style.display = "none";
+      document.getElementById("app-screen").style.display = "block";
+    }
+
     async function improvePrompt() {
       const input = document.getElementById("input-prompt").value.trim();
-      if (!input) {
-        alert("Por favor escribe un prompt primero.");
-        return;
-      }
+      if (!input) { alert("Por favor escribe un prompt primero."); return; }
 
       const btn = document.getElementById("improve-btn");
       const resultEl = document.getElementById("result");
@@ -186,19 +215,26 @@
         const res = await fetch("/improve", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt: input }),
+          body: JSON.stringify({ prompt: input, password: sessionPassword }),
         });
 
         const data = await res.json();
 
-        if (!res.ok) {
+        if (res.status === 401) {
+          // Contraseña expiró o cambió — volver al login
+          sessionStorage.removeItem("app_password");
+          sessionPassword = "";
+          document.getElementById("login-screen").style.display = "flex";
+          document.getElementById("app-screen").style.display = "none";
+          resultEl.innerHTML = '<span class="placeholder-text">El prompt mejorado aparecerá aquí…</span>';
+        } else if (!res.ok) {
           resultEl.innerHTML = `<span class="error-text">Error: ${data.error || "Error desconocido"}</span>`;
         } else {
           resultEl.textContent = data.improved;
           copyBtn.style.display = "inline-block";
         }
-      } catch (err) {
-        resultEl.innerHTML = `<span class="error-text">Error de conexión. Asegúrate de que el servidor esté corriendo.</span>`;
+      } catch {
+        resultEl.innerHTML = `<span class="error-text">Error de conexión.</span>`;
       } finally {
         btn.disabled = false;
         btn.textContent = "Mejorar prompt";
@@ -213,8 +249,12 @@
       setTimeout(() => { btn.textContent = "Copiar"; }, 2000);
     }
 
-    document.getElementById("input-prompt").addEventListener("keydown", (e) => {
+    document.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && e.ctrlKey) improvePrompt();
+      if (e.key === "Enter" && document.getElementById("login-screen").style.display !== "none") {
+        e.preventDefault();
+        doLogin();
+      }
     });
   </script>
 </body>
