@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mejorador de Prompts</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f5f5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.08);
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 760px;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: .35rem;
+    }
+
+    .subtitle {
+      font-size: .9rem;
+      color: #666;
+      margin-bottom: 2rem;
+    }
+
+    label {
+      display: block;
+      font-size: .85rem;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: .5rem;
+    }
+
+    textarea {
+      width: 100%;
+      border: 1.5px solid #ddd;
+      border-radius: 8px;
+      padding: .85rem 1rem;
+      font-size: .95rem;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 140px;
+      transition: border-color .2s;
+      color: #222;
+      background: #fafafa;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #4f46e5;
+      background: #fff;
+    }
+
+    button {
+      margin-top: 1.2rem;
+      width: 100%;
+      padding: .85rem;
+      background: #4f46e5;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s, opacity .2s;
+    }
+
+    button:hover:not(:disabled) { background: #4338ca; }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+
+    .divider {
+      border: none;
+      border-top: 1.5px solid #eee;
+      margin: 2rem 0;
+    }
+
+    .result-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: .5rem;
+    }
+
+    #copy-btn {
+      width: auto;
+      margin-top: 0;
+      padding: .4rem .9rem;
+      font-size: .8rem;
+      background: #f0f0f0;
+      color: #333;
+      border-radius: 6px;
+      font-weight: 500;
+    }
+
+    #copy-btn:hover:not(:disabled) { background: #e0e0e0; }
+
+    #result {
+      background: #f9f8ff;
+      border: 1.5px solid #e0deff;
+      border-radius: 8px;
+      padding: 1rem;
+      font-size: .93rem;
+      line-height: 1.65;
+      color: #222;
+      white-space: pre-wrap;
+      min-height: 80px;
+    }
+
+    .placeholder-text { color: #aaa; font-style: italic; }
+
+    .error-text { color: #dc2626; }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>✨ Mejorador de Prompts</h1>
+    <p class="subtitle">Optimiza tus prompts usando el framework TCEPF (Tarea · Contexto · Ejemplos · Persona · Tono · Formato)</p>
+
+    <label for="input-prompt">Tu prompt original</label>
+    <textarea
+      id="input-prompt"
+      placeholder="Escribe aquí el prompt que quieres mejorar..."
+    ></textarea>
+
+    <button id="improve-btn" onclick="improvePrompt()">
+      Mejorar prompt
+    </button>
+
+    <hr class="divider" />
+
+    <div class="result-label">
+      <label style="margin-bottom:0">Prompt mejorado</label>
+      <button id="copy-btn" onclick="copyResult()" style="display:none">Copiar</button>
+    </div>
+    <div id="result"><span class="placeholder-text">El prompt mejorado aparecerá aquí…</span></div>
+  </div>
+
+  <script>
+    async function improvePrompt() {
+      const input = document.getElementById("input-prompt").value.trim();
+      if (!input) {
+        alert("Por favor escribe un prompt primero.");
+        return;
+      }
+
+      const btn = document.getElementById("improve-btn");
+      const resultEl = document.getElementById("result");
+      const copyBtn = document.getElementById("copy-btn");
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Mejorando…';
+      resultEl.innerHTML = '<span class="placeholder-text">Procesando tu prompt…</span>';
+      copyBtn.style.display = "none";
+
+      try {
+        const res = await fetch("/improve", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: input }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          resultEl.innerHTML = `<span class="error-text">Error: ${data.error || "Error desconocido"}</span>`;
+        } else {
+          resultEl.textContent = data.improved;
+          copyBtn.style.display = "inline-block";
+        }
+      } catch (err) {
+        resultEl.innerHTML = `<span class="error-text">Error de conexión. Asegúrate de que el servidor esté corriendo.</span>`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Mejorar prompt";
+      }
+    }
+
+    async function copyResult() {
+      const text = document.getElementById("result").textContent;
+      await navigator.clipboard.writeText(text);
+      const btn = document.getElementById("copy-btn");
+      btn.textContent = "¡Copiado!";
+      setTimeout(() => { btn.textContent = "Copiar"; }, 2000);
+    }
+
+    document.getElementById("input-prompt").addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && e.ctrlKey) improvePrompt();
+    });
+  </script>
+</body>
+</html>
