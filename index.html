@@ -137,10 +137,17 @@
 
     <!-- PANTALLA PRINCIPAL -->
     <div id="app-screen">
-      <h1>✨ Mejorador de Prompts</h1>
-      <p class="subtitle">Optimiza tus prompts usando el framework TCEPF (Tarea · Contexto · Ejemplos · Persona · Tono · Formato)</p>
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:1rem; margin-bottom:.35rem;">
+        <h1 id="app-title">✨ Mejorador de Prompts</h1>
+        <!-- Selector de idioma -->
+        <div style="display:flex; gap:.5rem; margin-top:.2rem;">
+          <button id="btn-es" onclick="setLanguage('es')" style="width:auto; margin-top:0; padding:.4rem 1rem; font-size:.85rem; border-radius:20px;">🇲🇽 Español</button>
+          <button id="btn-en" onclick="setLanguage('en')" style="width:auto; margin-top:0; padding:.4rem 1rem; font-size:.85rem; border-radius:20px; background:#e5e7eb; color:#333;">🇺🇸 English</button>
+        </div>
+      </div>
+      <p class="subtitle" id="app-subtitle">Optimiza tus prompts usando el framework TCEPF (Tarea · Contexto · Ejemplos · Persona · Tono · Formato)</p>
 
-      <label for="input-prompt">Tu prompt original</label>
+      <label for="input-prompt" id="label-input">Tu prompt original</label>
       <textarea id="input-prompt" placeholder="Escribe aquí el prompt que quieres mejorar..."></textarea>
 
       <button id="improve-btn" onclick="improvePrompt()">Mejorar prompt</button>
@@ -148,16 +155,71 @@
       <hr class="divider" />
 
       <div class="result-label">
-        <label style="margin-bottom:0">Prompt mejorado</label>
+        <label style="margin-bottom:0" id="label-result">Prompt mejorado</label>
         <button id="copy-btn" onclick="copyResult()" style="display:none">Copiar</button>
       </div>
-      <div id="result"><span class="placeholder-text">El prompt mejorado aparecerá aquí…</span></div>
+      <div id="result"><span class="placeholder-text" id="placeholder-text">El prompt mejorado aparecerá aquí…</span></div>
     </div>
 
   </div>
 
   <script>
     let sessionPassword = "";
+    let currentLanguage = "es";
+
+    const texts = {
+      es: {
+        title: "✨ Mejorador de Prompts",
+        subtitle: "Optimiza tus prompts usando el framework TCEPF (Tarea · Contexto · Ejemplos · Persona · Tono · Formato)",
+        labelInput: "Tu prompt original",
+        placeholder: "Escribe aquí el prompt que quieres mejorar...",
+        btnImprove: "Mejorar prompt",
+        labelResult: "Prompt mejorado",
+        placeholderResult: "El prompt mejorado aparecerá aquí…",
+        processing: "Procesando tu prompt…",
+        copy: "Copiar",
+        copied: "¡Copiado!",
+        improving: "Mejorando…",
+        emptyAlert: "Por favor escribe un prompt primero.",
+      },
+      en: {
+        title: "✨ Prompt Improver",
+        subtitle: "Optimize your prompts using the TCEPF framework (Task · Context · Examples · Persona · Tone · Format)",
+        labelInput: "Your original prompt",
+        placeholder: "Write here the prompt you want to improve...",
+        btnImprove: "Improve prompt",
+        labelResult: "Improved prompt",
+        placeholderResult: "The improved prompt will appear here…",
+        processing: "Processing your prompt…",
+        copy: "Copy",
+        copied: "Copied!",
+        improving: "Improving…",
+        emptyAlert: "Please write a prompt first.",
+      }
+    };
+
+    function setLanguage(lang) {
+      currentLanguage = lang;
+      const t = texts[lang];
+      document.getElementById("app-title").textContent = t.title;
+      document.getElementById("app-subtitle").textContent = t.subtitle;
+      document.getElementById("label-input").textContent = t.labelInput;
+      document.getElementById("input-prompt").placeholder = t.placeholder;
+      document.getElementById("improve-btn").textContent = t.btnImprove;
+      document.getElementById("label-result").textContent = t.labelResult;
+      document.getElementById("copy-btn").textContent = t.copy;
+
+      const resultEl = document.getElementById("result");
+      if (resultEl.querySelector(".placeholder-text")) {
+        resultEl.innerHTML = `<span class="placeholder-text">${t.placeholderResult}</span>`;
+      }
+
+      // Estilos de los botones de idioma
+      document.getElementById("btn-es").style.background = lang === "es" ? "#4f46e5" : "#e5e7eb";
+      document.getElementById("btn-es").style.color = lang === "es" ? "#fff" : "#333";
+      document.getElementById("btn-en").style.background = lang === "en" ? "#4f46e5" : "#e5e7eb";
+      document.getElementById("btn-en").style.color = lang === "en" ? "#fff" : "#333";
+    }
 
     // Si ya hay contraseña guardada en sesión, saltar login
     sessionPassword = sessionStorage.getItem("app_password") || "";
@@ -199,23 +261,24 @@
     }
 
     async function improvePrompt() {
+      const t = texts[currentLanguage];
       const input = document.getElementById("input-prompt").value.trim();
-      if (!input) { alert("Por favor escribe un prompt primero."); return; }
+      if (!input) { alert(t.emptyAlert); return; }
 
       const btn = document.getElementById("improve-btn");
       const resultEl = document.getElementById("result");
       const copyBtn = document.getElementById("copy-btn");
 
       btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span>Mejorando…';
-      resultEl.innerHTML = '<span class="placeholder-text">Procesando tu prompt…</span>';
+      btn.innerHTML = `<span class="spinner"></span>${t.improving}`;
+      resultEl.innerHTML = `<span class="placeholder-text">${t.processing}</span>`;
       copyBtn.style.display = "none";
 
       try {
         const res = await fetch("/improve", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt: input, password: sessionPassword }),
+          body: JSON.stringify({ prompt: input, password: sessionPassword, language: currentLanguage }),
         });
 
         const data = await res.json();
@@ -232,21 +295,23 @@
         } else {
           resultEl.textContent = data.improved;
           copyBtn.style.display = "inline-block";
+          copyBtn.textContent = t.copy;
         }
       } catch {
-        resultEl.innerHTML = `<span class="error-text">Error de conexión.</span>`;
+        resultEl.innerHTML = `<span class="error-text">Connection error.</span>`;
       } finally {
         btn.disabled = false;
-        btn.textContent = "Mejorar prompt";
+        btn.textContent = t.btnImprove;
       }
     }
 
     async function copyResult() {
+      const t = texts[currentLanguage];
       const text = document.getElementById("result").textContent;
       await navigator.clipboard.writeText(text);
       const btn = document.getElementById("copy-btn");
-      btn.textContent = "¡Copiado!";
-      setTimeout(() => { btn.textContent = "Copiar"; }, 2000);
+      btn.textContent = t.copied;
+      setTimeout(() => { btn.textContent = t.copy; }, 2000);
     }
 
     document.addEventListener("keydown", (e) => {
